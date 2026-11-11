@@ -6,6 +6,7 @@ on:
     paths:
       - 'auto/config'
       - 'config/package-lists/zenkaios-cinnamon.list.chroot'
+      - 'config/hooks/normal/**'
       - '.github/workflows/build-cinnamon-iso.yml'
 
 permissions:
@@ -36,6 +37,7 @@ jobs:
               test -f config/package-lists/zenkaios-cinnamon.list.chroot
               grep -qx "linux-image-amd64" config/package-lists/zenkaios-cinnamon.list.chroot
               grep -qx "cinnamon-core" config/package-lists/zenkaios-cinnamon.list.chroot
+              chmod +x config/hooks/normal/*.hook.chroot
               sh ./auto/config
               lb build
               ISO="$(find . -maxdepth 2 -type f -name "*.iso" -print -quit)"
