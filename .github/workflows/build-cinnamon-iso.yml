@@ -132,13 +132,13 @@ jobs:
           test -n "$OVMF_VARS"
           cp "$OVMF_VARS" dist/OVMF_VARS.fd
           set +e
-          timeout 90s qemu-system-x86_64 \\
-            -machine q35,accel=tcg \\
-            -m 3072 -smp 2 \\
-            -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \\
-            -drive if=pflash,format=raw,file=dist/OVMF_VARS.fd \\
-            -cdrom "$ISO" -boot d \\
-            -display none -serial file:dist/qemu-uefi-serial.log \\
+          timeout 90s qemu-system-x86_64 \
+            -machine q35,accel=tcg \
+            -m 3072 -smp 2 \
+            -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
+            -drive if=pflash,format=raw,file=dist/OVMF_VARS.fd \
+            -cdrom "$ISO" -boot d \
+            -display none -serial file:dist/qemu-uefi-serial.log \
             -monitor none -no-reboot
           STATUS=$?
           set -e
