@@ -8,42 +8,43 @@ permissions:
 
 jobs:
   build-cinnamon:
-    name: Build Cinnamon Edition (AMD64)
+    name: Build Cinnamon Edition (Debian Bookworm / AMD64)
     runs-on: ubuntu-22.04
-    timeout-minutes: 180
+    timeout-minutes: 240
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Install Debian Live build tools
+      - name: Build inside native Debian Bookworm
         run: |
-          sudo apt-get update
-          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools grub-pc-bin grub-efi-amd64-bin mtools
+          docker run --privileged --rm \
+            -v "$GITHUB_WORKSPACE:/build" \
+            -w /build \
+            debian:bookworm \
+            bash -euxo pipefail -c '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                live-build debootstrap xorriso squashfs-tools \
+                grub-pc-bin grub-efi-amd64-bin mtools dosfstools \
+                ca-certificates
+              test -f .github/zenkaios-cinnamon.list
+              mkdir -p config/package-lists
+              cp .github/zenkaios-cinnamon.list config/package-lists/zenkaios.list.chroot
+              grep -qx "linux-image-amd64" config/package-lists/zenkaios.list.chroot
+              grep -qx "cinnamon-core" config/package-lists/zenkaios.list.chroot
+              sh ./auto/config
+              lb build
+              ISO="$(find . -maxdepth 2 -type f -name "*.iso" -print -quit)"
+              test -n "$ISO"
+              mkdir -p dist
+              cp "$ISO" dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso
+              test -s dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso
+              sha256sum dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso | tee dist/SHA256SUMS.txt
+              ls -lh dist/
+            '
 
-      - name: Select Cinnamon desktop and Debian AMD64 kernel
-        run: |
-          test -f .github/zenkaios-cinnamon.list
-          cp .github/zenkaios-cinnamon.list config/package-lists/zenkaios.list.chroot
-          grep -qx 'linux-image-amd64' config/package-lists/zenkaios.list.chroot
-          grep -qx 'cinnamon-core' config/package-lists/zenkaios.list.chroot
-
-      - name: Configure Debian Live
-        run: sudo sh ./auto/config
-
-      - name: Build Cinnamon ISO
-        run: sudo lb build
-
-      - name: Verify ISO and create checksum
-        run: |
-          ISO="$(find . -maxdepth 2 -type f -name '*.iso' -print -quit)"
-          test -n "$ISO"
-          mkdir -p dist
-          cp "$ISO" dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso
-          test -s dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso
-          sha256sum dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso | tee dist/SHA256SUMS.txt
-          ls -lh dist/
-
-      - name: Upload Cinnamon ISO artifact
+      - name: Upload verified ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: ZenkaiOS-Cinnamon-Alpha-0.1-ISO
