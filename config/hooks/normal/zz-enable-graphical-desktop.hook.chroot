@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+# Ensure the live system starts in graphical mode and LightDM owns the display.
+mkdir -p /etc/systemd/system
+systemctl set-default graphical.target || ln -sfn /lib/systemd/system/graphical.target /etc/systemd/system/default.target
+if [ -e /lib/systemd/system/lightdm.service ]; then
+  ln -sfn /lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+elif [ -e /usr/lib/systemd/system/lightdm.service ]; then
+  ln -sfn /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+else
+  echo "LightDM unit file is missing from the chroot" >&2
+  exit 1
+fi
