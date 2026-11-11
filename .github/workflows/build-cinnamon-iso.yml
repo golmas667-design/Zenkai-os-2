@@ -150,3 +150,62 @@ jobs:
           fi
           echo "QEMU remained running for the 90-second UEFI smoke-test window."
           echo "This checks UEFI boot handoff, not successful Cinnamon desktop login."
+
+  graphical-desktop-smoke-test:
+    name: Cinnamon graphical desktop smoke test (QEMU)
+    needs: build-cinnamon
+    runs-on: ubuntu-22.04
+    timeout-minutes: 12
+    steps:
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-ISO
+          path: dist
+
+      - name: Install QEMU and image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 python3-pil
+
+      - name: Boot graphical live system and capture framebuffer
+        shell: bash
+        run: |
+          set -euo pipefail
+          ISO="dist/ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-amd64.iso"
+          test -s "$ISO"
+          qemu-system-x86_64 -machine q35,accel=tcg -m 4096 -smp 2 \
+            -cdrom "$ISO" -boot d -vga std -display none \
+            -monitor unix:dist/qemu-monitor.sock,server=on,wait=off \
+            -serial file:dist/qemu-graphical-serial.log -no-reboot \
+            >/dev/null 2>&1 &
+          QEMU_PID=$!
+          trap 'kill "$QEMU_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            [ -S dist/qemu-monitor.sock ] && break
+            sleep 1
+          done
+          test -S dist/qemu-monitor.sock
+          sleep 100
+          python3 - <<'PY'
+          import socket, time
+          s=socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+          s.connect("dist/qemu-monitor.sock")
+          time.sleep(1)
+          s.recv(4096)
+          s.sendall(b"screendump dist/cinnamon-screen.ppm\n")
+          time.sleep(3)
+          s.close()
+          PY
+          test -s dist/cinnamon-screen.ppm
+          python3 - <<'PY'
+          from PIL import Image, ImageStat
+          im=Image.open("dist/cinnamon-screen.ppm").convert("RGB")
+          stat=ImageStat.Stat(im)
+          extrema=im.getextrema()
+          print("Framebuffer:", im.size, "RGB extrema:", extrema, "mean:", stat.mean)
+          if max(stat.mean) < 2 or max(max(c) for c in extrema) < 8:
+              raise SystemExit("Framebuffer appears completely black")
+          print("A non-black graphical framebuffer was captured.")
+          PY
+          echo "Framebuffer capture is a visual smoke test, not proof that Cinnamon is fully usable."
