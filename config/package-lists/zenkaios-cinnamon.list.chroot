@@ -25,3 +25,10 @@ locales
 sudo
 wget
 curl
+cinnamon-session
+dbus
+dbus-x11
+policykit-1
+accountsservice
+xserver-xorg-video-all
+x11-xserver-utils
