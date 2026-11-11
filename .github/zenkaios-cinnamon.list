@@ -1,4 +1,9 @@
 linux-image-amd64
+firmware-linux
+firmware-linux-nonfree
+firmware-misc-nonfree
+firmware-intel-graphics
+firmware-amd-graphics
 live-boot
 live-config
 live-config-systemd
