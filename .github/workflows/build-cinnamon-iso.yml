@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - 'auto/config'
-      - '.github/zenkaios-cinnamon.list'
+      - 'config/package-lists/zenkaios-cinnamon.list.chroot'
       - '.github/workflows/build-cinnamon-iso.yml'
 
 permissions:
@@ -33,11 +33,9 @@ jobs:
                 live-build debootstrap xorriso squashfs-tools \
                 grub-pc-bin grub-efi-amd64-bin mtools dosfstools \
                 ca-certificates
-              test -f .github/zenkaios-cinnamon.list
-              mkdir -p config/package-lists
-              cp .github/zenkaios-cinnamon.list config/package-lists/zenkaios.list.chroot
-              grep -qx "linux-image-amd64" config/package-lists/zenkaios.list.chroot
-              grep -qx "cinnamon-core" config/package-lists/zenkaios.list.chroot
+              test -f config/package-lists/zenkaios-cinnamon.list.chroot
+              grep -qx "linux-image-amd64" config/package-lists/zenkaios-cinnamon.list.chroot
+              grep -qx "cinnamon-core" config/package-lists/zenkaios-cinnamon.list.chroot
               sh ./auto/config
               lb build
               ISO="$(find . -maxdepth 2 -type f -name "*.iso" -print -quit)"
