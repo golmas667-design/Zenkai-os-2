@@ -100,3 +100,51 @@ jobs:
           fi
           echo "QEMU remained running for the 90-second BIOS smoke-test window."
           echo "This verifies ISO boot handoff only; it does not certify Cinnamon desktop or UEFI."
+
+  uefi-boot-smoke-test:
+    name: UEFI boot smoke test (QEMU / OVMF)
+    needs: build-cinnamon
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-ISO
+          path: dist
+
+      - name: Install QEMU and UEFI firmware
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 ovmf xorriso
+
+      - name: Validate UEFI boot entry and start virtual machine
+        shell: bash
+        run: |
+          set -euo pipefail
+          ISO="dist/ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-amd64.iso"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -report_el_torito plain | tee dist/uefi-el-torito.txt
+          grep -Eiq 'UEFI|EFI' dist/uefi-el-torito.txt
+          OVMF_CODE="$(find /usr/share/OVMF -maxdepth 1 -type f \\( -name 'OVMF_CODE_4M.fd' -o -name 'OVMF_CODE.fd' \\) | head -n1)"
+          OVMF_VARS="$(find /usr/share/OVMF -maxdepth 1 -type f \\( -name 'OVMF_VARS_4M.fd' -o -name 'OVMF_VARS.fd' \\) | head -n1)"
+          test -n "$OVMF_CODE"
+          test -n "$OVMF_VARS"
+          cp "$OVMF_VARS" dist/OVMF_VARS.fd
+          set +e
+          timeout 90s qemu-system-x86_64 \\
+            -machine q35,accel=tcg \\
+            -m 3072 -smp 2 \\
+            -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \\
+            -drive if=pflash,format=raw,file=dist/OVMF_VARS.fd \\
+            -cdrom "$ISO" -boot d \\
+            -display none -serial file:dist/qemu-uefi-serial.log \\
+            -monitor none -no-reboot
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -ne 124 ] && [ "$STATUS" -ne 0 ]; then
+            cat dist/qemu-uefi-serial.log || true
+            exit 1
+          fi
+          echo "QEMU remained running for the 90-second UEFI smoke-test window."
+          echo "This checks UEFI boot handoff, not successful Cinnamon desktop login."
