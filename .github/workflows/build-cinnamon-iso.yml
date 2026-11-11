@@ -126,8 +126,8 @@ jobs:
           test -s "$ISO"
           xorriso -indev "$ISO" -report_el_torito plain | tee dist/uefi-el-torito.txt
           grep -Eiq 'UEFI|EFI' dist/uefi-el-torito.txt
-          OVMF_CODE="$(find /usr/share/OVMF -maxdepth 1 -type f \\( -name 'OVMF_CODE_4M.fd' -o -name 'OVMF_CODE.fd' \\) | head -n1)"
-          OVMF_VARS="$(find /usr/share/OVMF -maxdepth 1 -type f \\( -name 'OVMF_VARS_4M.fd' -o -name 'OVMF_VARS.fd' \\) | head -n1)"
+          OVMF_CODE="$(ls /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd 2>/dev/null | head -n1 || true)"
+          OVMF_VARS="$(ls /usr/share/OVMF/OVMF_VARS_4M.fd /usr/share/OVMF/OVMF_VARS.fd 2>/dev/null | head -n1 || true)"
           test -n "$OVMF_CODE"
           test -n "$OVMF_VARS"
           cp "$OVMF_VARS" dist/OVMF_VARS.fd
