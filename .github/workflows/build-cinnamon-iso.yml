@@ -2,6 +2,11 @@ name: Build ZenkaiOS Cinnamon ISO
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'auto/config'
+      - '.github/zenkaios-cinnamon.list'
+      - '.github/workflows/build-cinnamon-iso.yml'
 
 permissions:
   contents: read
