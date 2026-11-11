@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+lb config \
+  --mode debian \
+  --distribution bookworm \
+  --architectures amd64 \
+  --binary-image iso-hybrid \
+  --archive-areas "main contrib non-free non-free-firmware" \
+  --debian-installer false \
+  --bootappend-live "boot=live components locales=es_UY.UTF-8 keyboard-layouts=latam"
