@@ -54,3 +54,49 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+  boot-smoke-test:
+    name: BIOS boot smoke test (QEMU)
+    needs: build-cinnamon
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-ISO
+          path: dist
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86
+
+      - name: Validate ISO and attempt BIOS boot
+        shell: bash
+        run: |
+          set -euo pipefail
+          ISO="dist/ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-amd64.iso"
+          test -s "$ISO"
+          file "$ISO"
+          xorriso -indev "$ISO" -report_el_torito plain
+          set +e
+          timeout 90s qemu-system-x86_64 \
+            -machine accel=tcg \
+            -m 3072 \
+            -smp 2 \
+            -cdrom "$ISO" \
+            -boot d \
+            -display none \
+            -serial file:dist/qemu-bios-serial.log \
+            -monitor none \
+            -no-reboot
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -ne 124 ] && [ "$STATUS" -ne 0 ]; then
+            echo "QEMU exited unexpectedly: $STATUS"
+            cat dist/qemu-bios-serial.log || true
+            exit 1
+          fi
+          echo "QEMU remained running for the 90-second BIOS smoke-test window."
+          echo "This verifies ISO boot handoff only; it does not certify Cinnamon desktop or UEFI."
