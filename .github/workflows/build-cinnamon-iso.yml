@@ -13,19 +13,19 @@ permissions:
 
 jobs:
   build-cinnamon:
-    name: Build Cinnamon Edition (Debian Bookworm / AMD64)
+    name: Build Cinnamon Edition (Debian Trixie / AMD64)
     runs-on: ubuntu-22.04
     timeout-minutes: 240
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Build inside native Debian Bookworm
+      - name: Build inside native Debian Trixie
         run: |
           docker run --privileged --rm \
             -v "$GITHUB_WORKSPACE:/build" \
             -w /build \
-            debian:bookworm \
+            debian:trixie \
             bash -euxo pipefail -c '
               export DEBIAN_FRONTEND=noninteractive
               apt-get update
@@ -43,16 +43,16 @@ jobs:
               ISO="$(find . -maxdepth 2 -type f -name "*.iso" -print -quit)"
               test -n "$ISO"
               mkdir -p dist
-              cp "$ISO" dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso
-              test -s dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso
-              sha256sum dist/ZenkaiOS-Cinnamon-Alpha-0.1-amd64.iso | tee dist/SHA256SUMS.txt
+              cp "$ISO" dist/ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-amd64.iso
+              test -s dist/ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-amd64.iso
+              sha256sum dist/ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-amd64.iso | tee dist/SHA256SUMS.txt
               ls -lh dist/
             '
 
       - name: Upload verified ISO artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ZenkaiOS-Cinnamon-Alpha-0.1-ISO
+          name: ZenkaiOS-Cinnamon-Trixie-Alpha-0.2-ISO
           path: dist/
           if-no-files-found: error
           retention-days: 14
