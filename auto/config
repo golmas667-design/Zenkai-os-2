@@ -7,5 +7,4 @@ lb config \
   --binary-image iso-hybrid \
   --archive-areas "main contrib non-free non-free-firmware" \
   --debian-installer false \
-  --security false \
   --bootappend-live "boot=live components locales=es_UY.UTF-8 keyboard-layouts=latam"
