@@ -33,3 +33,35 @@ xserver-xorg-video-all
 x11-xserver-utils
 polkitd
 pkexec
+# Broad Wi-Fi firmware (Intel, Realtek, Broadcom, Atheros, MediaTek, Marvell)
+firmware-iwlwifi
+firmware-realtek
+firmware-brcm80211
+firmware-atheros
+firmware-mediatek
+firmware-libertas
+# Wireless tools and NetworkManager integration
+wpasupplicant
+iw
+rfkill
+wireless-regdb
+bluez
+blueman
+# Common hardware discovery and diagnostics
+pciutils
+usbutils
+lshw
+inxi
+dmidecode
+v4l-utils
+# Graphics, input, audio and laptop hardware support
+xserver-xorg-input-all
+mesa-utils
+mesa-vulkan-drivers
+firmware-intel-sound
+alsa-utils
+pipewire-audio
+wireplumber
+pavucontrol
+acpi
+power-profiles-daemon
