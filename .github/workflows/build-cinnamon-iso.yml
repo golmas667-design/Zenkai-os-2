@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - 'auto/config'
-      - 'config/package-lists/zenkaios-cinnamon.list.chroot'
+      - 'config/package-lists/zenkaios.list.chroot'
       - 'config/hooks/normal/**'
       - '.github/workflows/build-cinnamon-iso.yml'
 
@@ -38,9 +38,9 @@ jobs:
                 live-build debootstrap xorriso squashfs-tools \
                 grub-pc-bin grub-efi-amd64-bin mtools dosfstools \
                 ca-certificates
-              test -f config/package-lists/zenkaios-cinnamon.list.chroot
-              grep -qx "linux-image-amd64" config/package-lists/zenkaios-cinnamon.list.chroot
-              grep -qx "cinnamon-core" config/package-lists/zenkaios-cinnamon.list.chroot
+              test -f config/package-lists/zenkaios.list.chroot
+              grep -qx "linux-image-amd64" config/package-lists/zenkaios.list.chroot
+              grep -qx "cinnamon-core" config/package-lists/zenkaios.list.chroot
               chmod +x config/hooks/normal/*.hook.chroot
               sh ./auto/config
               lb build
